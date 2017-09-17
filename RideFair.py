@@ -77,7 +77,7 @@ def get_prices(app, start_loc, dest_loc):
         start_longitude = start_loc[1], 
         end_latitude = dest_loc[0], 
         end_longitude = dest_loc[1], 
-        seat_count = 1).json["prices"] #later implementation account for multiple seats
+        seat_count = 2).json["prices"] #later implementation account for multiple seats
 
         #print (type(uber_prices), uber_prices)
 
@@ -275,7 +275,7 @@ def query_price(loc_role, loc_num, car_pick):
         #return the prices with this start node
         for end_loc in PriceMap[loc_coords]:
             found_prices = [None,None]
-            for index in len(cars):
+            for index in range(len(cars)):
                 if cars[index] in PriceMap[loc_coords][end_loc].keys():
                     min_price = PriceMap[loc_coords][end_loc][cars[index]][0]
                     found_prices[index]=str(min_price)
@@ -288,7 +288,7 @@ def query_price(loc_role, loc_num, car_pick):
         #go through and find prices with this end node
         for start in PriceMap:
             found_prices = [None, None]
-            for index in len(cars):
+            for index in range(len(cars)):
                 if cars[index] in PriceMap[start][loc_coords].keys():
                     min_price = PriceMap[start][loc_coords][cars[index]][0]
                     found_prices[index] = str(min_price)
@@ -307,4 +307,4 @@ if __name__ == "__main__":
     buildMap()
 
     print(PriceMap[main_start][main_dest])
-    #print(query_price("start", (main_start, main_dest),"fancy"))
+    print(query_price("start", 0,"fancy"))
