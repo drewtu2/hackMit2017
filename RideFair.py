@@ -1,8 +1,15 @@
 #import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import math
 import requests
+
+from flask import Flask
+app = Flask(__name__)
+
+
+
+from ast import literal_eval as make_tuple
 
 #LYFT CLIENT SETUP
 from lyft_rides.auth import ClientCredentialGrant
@@ -66,12 +73,12 @@ Returns:
     dictionary mapping travel options to price estimates {"stirng": tuple of floats (min, max)}
 
 '''
-def get_prices(app, start_loc, dest_loc):
+def get_prices(c_app, start_loc, dest_loc):
     #dictionary which will map travle options to prices
     #i.e. "UberPool: $1000 "
 
     price_ops = {}
-    if app == "Uber":
+    if c_app == "Uber":
         #use Uber API commands to get fare estimate
         uber_prices = uber_client.get_price_estimates(start_latitude = start_loc[0], 
         start_longitude = start_loc[1], 
@@ -89,7 +96,7 @@ def get_prices(app, start_loc, dest_loc):
                 #print(travel_method["display_name"])
                 pass
 
-    elif app == "Lyft":
+    elif c_app == "Lyft":
         #use lyft API to get fare estiamate
         # lyft_prices = lyft_client.get_cost_estimates(start_latitude = start_loc[0], 
         # start_longitude = start_loc[1], 
@@ -190,18 +197,21 @@ Method to change destination location
 '''
 def set_start(st_loc):
     main_start = st_loc
+    return
 
 '''
 Method to change destination location
 '''
 def set_dest(des_loc):
     main_dest = des_loc
+    return
 
 '''
 Method to car choice
 '''
-def set_dest(your_ride):
+def set_car(your_ride):
     main_car_choice = your_ride
+    return
 
 
 '''
@@ -267,7 +277,7 @@ args:
     -loc_coords - tuple, (latitude, longitude), location in question
     -car - string, will map to car choices dictionary, i.e. "big" yields (UberXL, lyft_plus)
 '''
-def query_price(loc_role, loc_num, car_pick):
+def query_prices(loc_role, loc_num, car_pick):
     price_results = {}
     cars = car_choices[car_pick]
     if loc_role == "start":
@@ -300,6 +310,42 @@ def query_price(loc_role, loc_num, car_pick):
 
     return price_results
 
+'''WEB APP METHODS
+
+Functions:
+
+-change_start
+
+-change_dest
+
+-change_car
+
+-get_price_list
+'''
+
+# #change start or dest
+# @app.route("/change/<int:role>/<str:new_coords>", methods=['POST'])
+# def change_loc():
+#     new_loc = make_tuple(new_coords)
+#     #start
+#     if role == 0: 
+#         set_start(new_loc)
+#     elif role == 1:
+#         set_dest(new_loc)
+#     return
+
+# #change start or dest
+# @app.route("/car_pick/<str:new_car>", methods=['POST'])
+# def change_loc():
+#     return set_car(new_car)
+
+# #query prices
+# @app.route("/get_prices/<int:role>/<str:loc>/<str:car>/", methods=['GET'])
+# def get_price_list():
+#     coords = make_tuple(loc)
+#     return query_prices(role, coords, car)
+
+ 
 
 if __name__ == "__main__":
     print("testing...\n")
@@ -307,4 +353,5 @@ if __name__ == "__main__":
     buildMap()
 
     print(PriceMap[main_start][main_dest])
-    print(query_price("start", 0,"fancy"))
+    #print(query_prices("start", 0,"fancy"))
+    print(query_prices("dest", 0,"fancy"))
