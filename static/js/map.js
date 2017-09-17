@@ -119,6 +119,9 @@
           fillOpacity: 0.35
         });
 	  
+	  	hexagon.addListener('mouseover', darkenOpacity);
+		hexagon.addListener('mouseout', lightenOpacity);
+		
         hexagon.setMap(input_map);
   }
   
@@ -171,4 +174,21 @@
 	};
 	
 	  return convObj;
+  };
+  
+  /*
+   * Darkens the plot area moused over
+   */
+  function darkenOpacity(event) {
+	  var polygonOptions = {fillOpacity: 0.8}
+	  this.setOptions(polygonOptions);
   }
+  
+  /*
+   * Lightens the plot area moused out
+   */
+  function lightenOpacity(event) {
+	  var polygonOptions = {fillOpacity: 0.35};
+	  this.setOptions(polygonOptions);
+  }
+  
