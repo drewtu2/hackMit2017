@@ -48,8 +48,8 @@
    */
   function successCallback(position) {
 	
-    //myLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-	myLatLng = new google.maps.LatLng(42.340108, -71.088185);
+    myLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+	//myLatLng = new google.maps.LatLng(42.340108, -71.088185);
     // To be run the first time the callback is called. (Creates the map object)
     if(map == undefined) {
       var myOptions = {
@@ -104,7 +104,9 @@
 		for (var neighbor in neighbors) {
 			//console.log(neighbor);
 			plotHexagon(input_map, neighbors[neighbor], 'DarkGreen',i);
+			i +=1;
 		}
+		
 		
 	}
   
@@ -112,7 +114,7 @@
 	 * Creates a hexagon of a given color from a set of points. Places on a given map. 
 	 *     
 	 */
-  function plotHexagon(input_map, point, color, id, loc_role="start") {
+  function plotHexagon(input_map, point, color, _id, loc_role="start") {
 	  var hexagonVerticies = generateHexagon(point, RADIUS);
 	  //console.log(hexagonVerticies);
 	  var hexagon = new google.maps.Polygon({
@@ -126,7 +128,7 @@
 	  
 	  	hexagon.addListener('mouseover', darkenOpacity);
 		hexagon.addListener('mouseout', lightenOpacity);
-		hexagon.addListener('click', function(){getPrices(id, loc_role, PICK)});
+		hexagon.addListener('click', function(e){getPrices(_id, loc_role, PICK,e)});
         hexagon.setMap(input_map);
   }
   
@@ -135,19 +137,57 @@
    * location_role: "start" or "dest"
    * car_pick: "shared", "reg", "big", "fancy"
    */
-  function getPrices(location, location_role, ride) {
+  function getPrices(localll, location_role, ride) {
   	var xhr = new XMLHttpRequest();
   	xhr.open("POST", "http://127.0.0.1:5000/api/prices/", true);
   	
   	var payload = JSON.stringify({
-  		"location": location,
+  		"location": localll,
   		"location-role": location_role,
-  		"car_pick": car_pick});
+  		"car_pick": ride});
+  	
+  	console.log(payload);
   	xhr.setRequestHeader('Content-Type', 'application/json');
-  	xhr.send(payload);
+  	
+  	xhr.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            console.log("response");
+            console.log(this)
+       }
+    };
+  	
+  	//xhr.send(payload);
+    console.log(localll);
+    switch(localll){
+    case 0:
+    	displayPrice(6.99, 8.28);
+    	break;
+    case 3:
+    	displayPrice(6.30, 6.03);
+    	break;
+    case 5:
+    	displayPrice(8.52, 9.30);
+    	break;
+    case 4:
+    	displayPrice(9.30, 9.27);
+    	break;
+    case 1:
+    	displayPrice(10.05, 11.32);
+    	break;
+    case 6:
+    	displayPrice(9.77, 11.97);
+    	break;
+    case 2:
+    	displayPrice(8.72, 9.30);
+    	break;
+    	
+    }
+  	
   };
   
-  
+  function displayPrice(uber, lyft, mode="shared"){
+	 window.alert(mode + " Ride\nUber: $" + uber*mult + "\nLyft: $" + lyft*mult);  
+  }
  /*
   * Given a point, return a list of points representing the vertexes of hexagon where the center to vertex is of a given length in miles.
   * 

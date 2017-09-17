@@ -46,6 +46,9 @@ function autocompleteCallback() {
 	
 	  submitLocation(myLatLng, place.geometry.location);
 	  
+	  plotHexagon(map, place.geometry.location, '#FF0000', 0);
+	  generateNeighbors(map, place.geometry.location, RADIUS);
+	  
 	  var address = '';
 	  if (place.address_components) {
 	    address = [
@@ -79,6 +82,7 @@ function autocompleteCallback() {
 		    .addEventListener('click', function() {
 		      console.log('Checkbox clicked! New state=' + this.checked);
 		          autocomplete.setOptions({strictBounds: this.checked});
+		          window.alert("Lowest Price is Zone 3! \n.25 Miles South East")
 		        });
 
 }
@@ -89,6 +93,7 @@ function autocompleteCallback() {
  * 	rideType:"something"
  *  }
  */
+var mult = 1;
 function updateRideType(ride){
 	var xhr = new XMLHttpRequest();
 	xhr.open("POST", "http://127.0.0.1:5000/api/ride/", true);
@@ -96,9 +101,23 @@ function updateRideType(ride){
 	var payload = JSON.stringify({
 		"rideType": ride});
 	xhr.setRequestHeader('Content-Type', 'application/json');
-	xhr.send(payload);
+	//xhr.send(payload);
 	
 	PICK = ride;
+	  switch(ride){
+	 case "shared":
+		  mult = 1;
+		  break;
+	 case "reg":
+		 mult = 2;
+		 break;
+	 case "big":
+		 mult = 2.25;
+		 break;
+	 case "fancy":
+	 	 mult = 3.2;
+	 	 break;
+	 }
 };
 
 /*
@@ -117,4 +136,5 @@ function submitLocation(start_coord, end_coord) {
 		"endCoord": (end_coord.lat(), end_coord.lng())});
 	xhr.setRequestHeader('Content-Type', 'application/json');
 	xhr.send(payload);
+	
 };

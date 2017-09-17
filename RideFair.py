@@ -3,6 +3,8 @@ import numpy as np
 #import matplotlib.pyplot as plt
 import math
 import requests
+import fake_cube
+import pickle
 
 from flask import Flask
 app = Flask(__name__)
@@ -259,15 +261,18 @@ def buildMap():
         end_map[index] = pos_ends[index]
 
 
-    for st in pos_starts:
-        PriceMap[st]= {}
-        for end in pos_ends:
-            PriceMap[st][end]={}
-            for app in apps:
-                PriceMap[st][end].update(get_prices(app, st, end))
-            #print (PriceMap[st][end])
-
+#    for st in pos_starts:
+#        PriceMap[st]= {}
+#        for end in pos_ends:
+#            PriceMap[st][end]={}
+#            for c_app in apps:
+#                PriceMap[st][end].update(get_prices(c_app, st, end))
+#            #print (PriceMap[st][end])
+#
+#    pickle.dump(PriceMap, open("pricemap.txt", "wb"))
+    PriceMap = pickle.load(open("pricemap.txt", "rb"))
     return PriceMap
+    
 
 '''
 Method that returns the list of prices for a particular locations given a car choice
