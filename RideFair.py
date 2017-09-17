@@ -2,13 +2,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import requests
 
 #LYFT CLIENT SETUP
 from lyft_rides.auth import ClientCredentialGrant
 from lyft_rides.session import Session as lyftSession
 
-auth_flow = ClientCredentialGrant(client_id="BqM2cwqXmV3w", client_secret="5uDeLNgJNRKb3n9Gg0BMEouzYphZjI9X", scopes="public")
+auth_flow = ClientCredentialGrant(client_id="BqM2cwqXmV3w", client_secret="SwNdpIHbN9adZ0lc4IWq_ejdZV7bBSz1", scopes=set(["public"]))
 lyft_session = auth_flow.get_session()
+lyft_token = lyft_session.oauth2credential.access_token
+
 
 from lyft_rides.client import LyftRidesClient
 lyft_client = LyftRidesClient(lyft_session)
@@ -31,12 +34,12 @@ main_start = (42.3601,-71.0942)
 main_dest = (42.3471,-71.0825)
 
 ride_types = ["lyft", "lyft_line", "lyft_plus", "lyft_lux",
-			"POOL", "uberX", "uberXL", "BLACK" ]
+			"uberPOOL", "uberX", "uberXL", "BLACK" ]
 
 
 #Maximum distance user is willing to walk in miles
 MAX_DIST = 5
-inc_miles = 1
+inc_miles = 0.125
 
 
 '''
@@ -44,7 +47,7 @@ Method to get miles in one degree of longitude from latitude
 '''
 
 def get_long_mi(latitude):
-	return math.cos(latitude)*69.172
+	return math.cos(latitude*math.pi/180)*69.172
 
 '''
 Method to get estimated price from app of choicer
@@ -68,9 +71,9 @@ def get_prices(app, start_loc, dest_loc):
 		start_longitude = start_loc[1], 
 		end_latitude = dest_loc[0], 
 		end_longitude = dest_loc[1], 
-		seat_count = 1) #later implementation account for multiple seats
+		seat_count = 1).json["prices"] #later implementation account for multiple seats
 
-		print (type(uber_prices), uber_prices.get("uberX"))
+		#print (type(uber_prices), uber_prices)
 
 		for  travel_method in uber_prices:
 			if travel_method["display_name"] in ride_types:
@@ -79,10 +82,21 @@ def get_prices(app, start_loc, dest_loc):
 
 	elif app == "Lyft":
 		#use lyft API to get fare estiamate
-		lyft_prices = lyft_client.get_cost(start_lat = start_loc[0], 
-		start_lng = start_loc[1], 
-		end_lat = dest_loc[0], 
-		end_lng = dest_loc[1])["cost_estimates"] 
+		# lyft_prices = lyft_client.get_cost_estimates(start_latitude = start_loc[0], 
+		# start_longitude = start_loc[1], 
+		# end_latitude = dest_loc[0], 
+		# end_longitude = dest_loc[1])#.json["cost_estimates"] 
+		start_latitude = start_loc[0] 
+		start_longitude = start_loc[1] 
+		end_latitude = dest_loc[0] 
+		end_longitude = dest_loc[1]
+
+		lyft_url = "https://api.lyft.com/v1/cost?ride_type=lyft&start_lat="+str(start_latitude)+"&start_lng="+str(start_longitude)+"&end_lat="+str(end_latitude)+"&end_lng="+str(end_longitude)
+
+		lyft_request = requests.get(lyft_url, headers={'Authorization': "Bearer "+lyft_token})
+		lyft_prices = lyft_request.json()["cost_estimates"]
+		#print(lyft_prices)
+
 		for travel_method in lyft_prices:
 			if travel_method["ride_type"] in ride_types:
 				price = (travel_method["estimated_cost_cents_min"]/100.0, travel_method["estimated_cost_cents_max"]/100.0)
@@ -207,8 +221,6 @@ def buildMap():
 	pos_ends = [main_dest]
 	pos_ends.extend(get_neighbors(main_dest))
 
-	types = ["lyft", "lyft_line", "lyft_plus", "lyft_lux",
-			"POOL", "uberX", "uberXL", "BLACK" ]
 
 	for st in pos_starts:
 		PriceMap[st]= {}
@@ -224,4 +236,4 @@ if __name__ == "__main__":
 	print("testing...\n")
 	print("Base prices: \n")
 	buildMap()
-	print(Price[main_start][main_dest])
+	print(PriceMap[main_start][main_dest])
