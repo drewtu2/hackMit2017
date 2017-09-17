@@ -8,7 +8,6 @@
   
   //var API_KEY = "AIzaSyAXrIT_Y0Diusx9r9osN1QgBdEY4m5yjcE";
   // printerList is an array of Printer Objects
-  var map;
   var myLatLng
   var RADIUS = .125;
 
@@ -34,6 +33,9 @@
     } else {
       console.log('Geolocation is not supported');
     }
+    console.log("goodbye world");
+    console.log(map);
+   
   }
  
   function errorCallback() {
@@ -59,6 +61,8 @@
     //else map.panTo(myLatlng);
     plotHexagon(map, myLatLng, '#FF0000');
     generateNeighbors(map, myLatLng, RADIUS);
+    
+    autocompleteCallback();
 }
  
 	/*
@@ -74,7 +78,7 @@
 	function generateNeighbors(input_map, point, radius) {
 		
 		var conv = latLngDecConv(point.lat(), 30);
-		console.log(conv);
+		//console.log(conv);
 		var neighbors = {
 			p1 : new google.maps.LatLng({
 				lat: point.lat() + (2 * radius * conv.mile2lat),
@@ -97,7 +101,7 @@
 		}
 		
 		for (var neighbor in neighbors) {
-			console.log(neighbor);
+			//console.log(neighbor);
 			plotHexagon(input_map, neighbors[neighbor], 'DarkGreen');
 		}
 		
@@ -139,7 +143,7 @@
 	  
 	  // Create conversion constants
 	  var conv = latLngDecConv(point.lat(), 60);
-  	  console.log(conv);
+  	  //console.log(conv);
 	  var p1 = {lat: point.lat(), 							lng: point.lng() - (radius * conv.mile2long)};
 	  var p2 = {lat: point.lat() + (radius * conv.diag_y), 	lng: point.lng() - (radius * conv.diag_x)};
 	  var p3 = {lat: point.lat() + (radius * conv.diag_y), 	lng: point.lng() + (radius * conv.diag_x)};

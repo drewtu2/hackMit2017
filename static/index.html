@@ -21,29 +21,70 @@
 	
 	<link rel="stylesheet" href="css/mystyle.css">
 	<script src="js/map.js"></script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js"></script>
+	<script src="js/search.js"></script>
+	<script async defer src="https://maps.googleapis.com/maps/api/js?libraries=places&callback=initGeolocation"></script>
+	
+	
+    
     
   </head>
   
-  <body onload="javascript:initGeolocation()">
-	
+  <!-- <body onload="javascript:initGeolocation()"> -->
+  <body>
 	<div class="container content no-margin no-padding full-page">
 	<div class = "row full-page no-margin">
   		<div class = "col-md-12 inherit-dim no-margin no-padding">
-	  		<div id="map" class = "inherit-dim no-margin"></div>
+  			<div class="pac-card" id="pac-card">
+		      <div>
+		        <div id="title">
+		          Destination
+		        </div>
+		        <div id="type-selector" class="pac-controls">
+		          <input type="radio" name="type" id="changetype-all" checked="checked">
+		          <label for="changetype-all">All</label>
+		
+		          <input type="radio" name="type" id="changetype-establishment">
+		          <label for="changetype-establishment">Establishments</label>
+		
+		          <input type="radio" name="type" id="changetype-address">
+		          <label for="changetype-address">Addresses</label>
+		
+		          <input type="radio" name="type" id="changetype-geocode">
+		          <label for="changetype-geocode">Geocodes</label>
+		        </div>
+		        <div id="ride-selector" class="pac-controls">
+		          <input type="radio" name="ride" id="changeride-shared" checked="checked">
+		          <label for="changeride-shared">Shared</label>
+		
+		          <input type="radio" name="ride" id="changeride-regular">
+		          <label for="changeride-regular">Regular</label>
+		
+		          <input type="radio" name="ride" id="changeride-big">
+		          <label for="changeride-big">Big</label>
+		
+		          <input type="radio" name="ride" id="changeride-fancy">
+		          <label for="changeride-fancy">Fancy</label>
+		        </div>
+		        <div id="strict-bounds-selector" class="pac-controls">
+		          <input type="checkbox" id="use-strict-bounds" value="">
+		          <label for="use-strict-bounds">Strict Bounds</label>
+		        </div>
+		      </div>
+		      <div id="pac-container">
+		        <input id="pac-input" type="text"
+		            placeholder="Enter a location">
+		      </div>
+		    </div>
+		    <div id="map" class = "inherit-dim no-margin"></div>
+		    <div id="infowindow-content">
+		      <img src="" width="16" height="16" id="place-icon">
+		      <span id="place-name"  class="title"></span><br>
+		      <span id="place-address"></span>
+		    </div>
+	  		
   		</div>
     </div>	 
 	</div>
-
-	<script>
-		var input = document.getElementById('pac-input');
-		var searchBox = new google.maps.places.SearchBox(input);
-		map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-	</script>
-
-
-	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBNv3yuOPpRS5rB8An7ix8K2dTl-XM5UZY&libraries=places&callback=initAutocomplete"
-         	async defer></script>
     
   </body>
 </html>
