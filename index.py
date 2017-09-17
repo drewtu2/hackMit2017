@@ -20,3 +20,8 @@ def run_app():
 def status_file(path):
 	return app.send_static_file(path)
 
+@app.route("/api/1/", methods=['POST'])
+def doThing():
+    input_json = request.get_json(force=True) 
+    print(input_json)
+    return 'Done', 201
