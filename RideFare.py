@@ -28,31 +28,21 @@ uber_client = UberRidesClient(session)
 apps = ["Uber", "Lyft"]
 
 #tuple representing destination latitude and longitude
-dest = (1,1);
+main_start = (0,0)
+main_dest = (1,1);
+
+ride_types = ["lyft", "lyft_line", "lyft_plus", "lyft_lux",
+
 
 #Maximum distance user is willing to walk in miles
 MAX_DIST = 5;
 inc_miles = 1;
 
 
-'''
-Price Map
-
--data structure mapping location information
-
--keys: Location tuples of (longitude, latitude)
--values:
-	-price_ops - dictionary mapping app to price options
-		-keys: app (i.e. "Uber", "Lyft", etc)
-		-values: dictionary of methods and prices (i.e.(UberX : $100, etc))
-	-neighbors
-		-list of neighboring locations (based either on hex map or own neighbor pints)
-'''
-PriceMap = pd.DataFrame()
 
 
 '''
-Method to get estimated price from app of choice
+Method to get estimated price from app of choicer
 
 args:
 	-app - string representing which app pricing you're looking for
@@ -62,33 +52,34 @@ Returns:
 	dictionary mapping travel options to price estimates {"stirng": tuple of floats (min, max)}
 
 '''
-def getPrices(app, start_loc):
+def get_prices(app, start_loc, dest_loc):
 	#dictionary which will map travle options to prices
 	#i.e. "UberPool: $1000 "
 
 	price_ops = {}
 	if app == "Uber":
 		#use Uber API commands to get fare estimate
-		uber_prices = uber_client.get_price_estimates(start_latitude = loc[0], 
-		start_longitude = loc[1], 
-		end_latitude = dest[0], 
-		end_longitude = dest[1], 
+		uber_prices = uber_client.get_price_estimates(start_latitude = start_loc[0], 
+		start_longitude = start_loc[1], 
+		end_latitude = dest_loc[0], 
+		end_longitude = dest_loc[1], 
 		seat_count = 1)["prices"] #later implementation account for multiple seats
 
 		for  travel_method in uber_prices:
-			#add in change from strings to floats for uber
-			price = ( travel_method["low_estimate"],travel_method["high_estimate"])
-			price_ops[travel_method["display_name"]] = price
+			if travel_method["display_name"] in ride_types:
+				price = ( travel_method["low_estimate"],travel_method["high_estimate"])
+				price_ops[travel_method["display_name"]] = price
+
 	elif app == "Lyft":
 		#use lyft API to get fare estiamate
-		lyft_prices = lyft_client.get_cost(start_lat = loc[0], 
-		start_lng = loc[1], 
-		end_lat = dest[0], 
-		end_lng = dest[1])["cost_estimates"] 
+		lyft_prices = lyft_client.get_cost(start_lat = start_loc[0], 
+		start_lng = start_loc[1], 
+		end_lat = dest_loc[0], 
+		end_lng = dest_loc[1])["cost_estimates"] 
 		for travel_method in lyft_prices:
-			#add lines to seperate max and min to be the parts of the tuple
-			price = (travel_method["estimated_cost_cents_min"]/100.0, travel_method["estimated_cost_cents_max"]/100.0)
-			price_ops[travel_method["ride_type"]] = price
+			if travel_method["ride_type"] in ride_types:
+				price = (travel_method["estimated_cost_cents_min"]/100.0, travel_method["estimated_cost_cents_max"]/100.0)
+				price_ops[travel_method["ride_type"]] = price
 
 
 	else:
@@ -150,33 +141,73 @@ class loc_tile (object):
 		self.dest = dest #global?
 		self.price_ops = {}
 		for app_option in apps:
-			self.price_ops[app_option] = getPrices(app_option, loc)
+			self.price_ops[app_option] = get_prices(app_option, loc, dest)
 		self.neighbors = get_neighbors(loc)
 
 	 
 
 
 
-
 '''
-Method to create tile
+Method to change destination location
 '''
-def create_tile(loc):
-	return loc_tile(loc);
-
-'''
-Method to add tile to price map
-
-Steps:
--create tile
--update data structure
-'''
-def add_new_tile(loc):
-
+def set_start(st_loc):
+	main_start = st_loc
 
 '''
 Method to change destination location
 '''
 def set_dest(des_loc):
+	main_dest = des_loc
+
+
+'''
+Price Map
+
+-"3D array"
+	-x: starts
+	-y: ends
+	-z: ride options
+	- point == price
+-data structure mapping location information
+
+-keys: Location tuples of (longitude, latitude)
+-values:
+	-price_ops - dictionary mapping app to price options
+		-keys: app (i.e. "Uber", "Lyft", etc)
+		-values: dictionary of methods and prices (i.e.(UberX : $100, etc))
+	-neighbors
+		-list of neighboring locations (based either on hex map or own neighbor pints)
+'''
+PriceMap = []
+
+
+'''
+Method to build 3D grid
+
+args: 
+	- start location
+	- end location
+
+Returns:
+3D array of prices based on starts, ends, and ride types
+'''
+def buildMap():
+	pos_starts = [main_start]
+	pos_starts.extend(get_neighbors(main_start))
+	pos_ends = [main_dest]
+	pos_ends.extend(get_neighbors(main_dest))
+
+	types = ["lyft", "lyft_line", "lyft_plus", "lyft_lux",
+			"POOL", "uberX", "uberXL", "BLACK" ]
+
+	for st in pos_starts:
+		PriceMap[st]= {}
+		for end in pos_ends:
+			PriceMap[st][end]={}
+			for app in apps:
+				PriceMap[st][end].update(get_prices(app, st, end))
+
+	return PriceMap
 
 
