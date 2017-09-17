@@ -22,7 +22,6 @@ def run_app():
 def status_file(path):
 	return app.send_static_file(path)
 
-
 #change start or dest
 @app.route("/api/seed", methods=['POST'])
 def set_loc():

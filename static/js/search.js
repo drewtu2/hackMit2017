@@ -3,7 +3,6 @@ var map;
 function autocompleteCallback() {
 	var card = document.getElementById('pac-card');
 	var input = document.getElementById('pac-input');
-	var types = document.getElementById('type-selector');
 	var rides = document.getElementById('ride-selector');
 	var strictBounds = document.getElementById('strict-bounds-selector');
 	
@@ -45,6 +44,8 @@ function autocompleteCallback() {
 	  marker.setPosition(place.geometry.location);
 	  marker.setVisible(true);
 	
+	  submitLocation(myLatLng, place.geometry.location);
+	  
 	  var address = '';
 	  if (place.address_components) {
 	    address = [
@@ -60,32 +61,19 @@ function autocompleteCallback() {
 	  infowindow.open(map, marker);
 	});
 	
-	// Sets a listener on a radio button to change the filter type on Places
-	// Autocomplete.
-	function setupClickListener(id, types) {
-	  var radioButton = document.getElementById(id);
-	  radioButton.addEventListener('click', function() {
-	    autocomplete.setTypes(types);
-	  });
-	}
+	// Sets a listener on a radio button to change the type of ride requested. 
 	
-	setupClickListener('changetype-all', []);
-	setupClickListener('changetype-address', ['address']);
-	setupClickListener('changetype-establishment', ['establishment']);
-	setupClickListener('changetype-geocode', ['geocode']);
-	
-	
-	function setupRideListener(id, ride) {
+	function setupRideListener(id, rideType) {
 		  var radioButton = document.getElementById(id);
 		  radioButton.addEventListener('click', function() {
-		    updateRideTypes(rideType);
+		    updateRideType(rideType);
 		  });
 		}
 		
-		setupRideListener('changeride-shared', ['shared']);
-		setupRideListener('changeride-regular', ['regular']);
-		setupRideListener('changeride-big', ['big']);
-		setupRideListener('changeride-fancy', ['fancy']);
+		setupRideListener('changeride-shared', 'shared');
+		setupRideListener('changeride-regular', 'reg');
+		setupRideListener('changeride-big', 'big');
+		setupRideListener('changeride-fancy', 'fancy');
 		
 		document.getElementById('use-strict-bounds')
 		    .addEventListener('click', function() {
@@ -95,6 +83,38 @@ function autocompleteCallback() {
 
 }
 
+/*
+ * Send the ride type. 
+ * {
+ * 	rideType:"something"
+ *  }
+ */
 function updateRideType(ride){
-	console.log(ride);
-}
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", "http://127.0.0.1:5000/api/ride/", true);
+	
+	var payload = JSON.stringify({
+		"rideType": ride});
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.send(payload);
+	
+	PICK = ride;
+};
+
+/*
+ * Submit the location and ride type.
+ * {
+ * 	start_coord:(lat, lng),
+ * 	end_coord:(lat,lng)
+ *  }
+ */
+function submitLocation(start_coord, end_coord) {
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", "http://127.0.0.1:5000/api/seed/", true);
+	
+	var payload = JSON.stringify({
+		"startCoord": (start_coord.lat(), start_coord.lng()),
+		"endCoord": (end_coord.lat(), end_coord.lng())});
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.send(payload);
+};

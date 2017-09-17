@@ -10,7 +10,8 @@
   // printerList is an array of Printer Objects
   var myLatLng
   var RADIUS = .125;
-
+  var PICK = "shared";
+  
   $(document).ready(function(){
 	
   });
@@ -59,7 +60,7 @@
       map = new google.maps.Map(document.getElementById("map"), myOptions); 
     }
     //else map.panTo(myLatlng);
-    plotHexagon(map, myLatLng, '#FF0000');
+    plotHexagon(map, myLatLng, '#FF0000', 0);
     generateNeighbors(map, myLatLng, RADIUS);
     
     autocompleteCallback();
@@ -99,10 +100,10 @@
 				lat: point.lat() + (2 * radius * conv.diag_y), 	
 				lng: point.lng() - (2 * radius * conv.diag_x)})
 		}
-		
+		var i= 1
 		for (var neighbor in neighbors) {
 			//console.log(neighbor);
-			plotHexagon(input_map, neighbors[neighbor], 'DarkGreen');
+			plotHexagon(input_map, neighbors[neighbor], 'DarkGreen',i);
 		}
 		
 	}
@@ -111,7 +112,7 @@
 	 * Creates a hexagon of a given color from a set of points. Places on a given map. 
 	 *     
 	 */
-  function plotHexagon(input_map, point, color) {
+  function plotHexagon(input_map, point, color, id, loc_role="start") {
 	  var hexagonVerticies = generateHexagon(point, RADIUS);
 	  //console.log(hexagonVerticies);
 	  var hexagon = new google.maps.Polygon({
@@ -125,9 +126,26 @@
 	  
 	  	hexagon.addListener('mouseover', darkenOpacity);
 		hexagon.addListener('mouseout', lightenOpacity);
-		
+		hexagon.addListener('click', function(){getPrices(id, loc_role, PICK)});
         hexagon.setMap(input_map);
   }
+  
+  /*
+   * location: 0-6
+   * location_role: "start" or "dest"
+   * car_pick: "shared", "reg", "big", "fancy"
+   */
+  function getPrices(location, location_role, ride) {
+  	var xhr = new XMLHttpRequest();
+  	xhr.open("POST", "http://127.0.0.1:5000/api/prices/", true);
+  	
+  	var payload = JSON.stringify({
+  		"location": location,
+  		"location-role": location_role,
+  		"car_pick": car_pick});
+  	xhr.setRequestHeader('Content-Type', 'application/json');
+  	xhr.send(payload);
+  };
   
   
  /*
