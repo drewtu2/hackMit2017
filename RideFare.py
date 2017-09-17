@@ -2,17 +2,38 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+#LYFT CLIENT SETUP
+from lyft_rides.auth import ClientCredentialGrant
+from lyft_rides.session import Session
+
+auth_flow = ClientCredentialGrant(client_id=BqM2cwqXmV3w, client_secret=5uDeLNgJNRKb3n9Gg0BMEouzYphZjI9X, scopes=YOUR_PERMISSION_SCOPES)
+
+from lyft_rides.client import LyftRidesClient
+
+lyft_session = auth_flow.get_session()
+lyft_client = LyftRidesClient(lyft_session)
+#{"token_type": "Bearer", "access_token": "XgOzXKLM6Oj/tTRdyndXpJMC6+UOvXQxAnmNJaaWwY2aJFXWqD2pJLxJ2uPWcmfbL2Y+yL87IFYzT7OE/EEjwf75DEq5U9qfCzplImiACUV91ikGBtuiIqs=", "expires_in": 86400, "scope": "public"}
+#lyft_token = XgOzXKLM6Oj/tTRdyndXpJMC6+UOvXQxAnmNJaaWwY2aJFXWqD2pJLxJ2uPWcmfbL2Y+yL87IFYzT7OE/EEjwf75DEq5U9qfCzplImiACUV91ikGBtuiIqs=
+
+#UBER CLIENT SETUP
 from uber_rides.session import session
 from uber_rides.client import UberRidesClient
 
-session = Session(server_token = <TOKEN>)
-client = UberRidesClient(session)
+uber_token = eWfH_tAQpYHHfVi2nCSFbLrLpoS_69f34ldS63J0
+session = Session(server_token = <uber_token>)
+uber_client = UberRidesClient(session)
 
 #list of apps to look for for price options
 apps = ["Uber", "Lyft"]
 
 #tuple representing destination latitude and longitude
 dest = (1,1);
+
+#Maximum distance user is willing to walk in miles
+MAX_DIST = 5;
+inc_miles = 1;
+
 
 '''
 Price Map
@@ -38,7 +59,7 @@ args:
 	-start_loc - tuple of (lat, long) of starting location
 
 Returns:
-	dictionary mapping travel options to price estimates {"stirng": "string"}
+	dictionary mapping travel options to price estimates {"stirng": tuple of floats (min, max)}
 
 '''
 def getPrices(app, start_loc):
@@ -48,17 +69,26 @@ def getPrices(app, start_loc):
 	price_ops = {}
 	if app == "Uber":
 		#use Uber API commands to get fare estimate
-		uber_prices = client.get_price_estimates(start_latitude = loc[0], 
+		uber_prices = uber_client.get_price_estimates(start_latitude = loc[0], 
 		start_longitude = loc[1], 
 		end_latitude = dest[0], 
 		end_longitude = dest[1], 
 		seat_count = 1) #later implementation account for multiple seats
 
 		for  travel_method in uber_prices:
+			#add in change from strings to floats for uber
 			price_ops[travel_method["display_name"]] = travel_method["estimate"]
 
 	elif app == "Lyft":
 		#use lyft API to get fare estiamate
+		lyft_prices = lyft_client.get_cost(start_lat = loc[0], 
+		start_lng = loc[1], 
+		end_lat = dest[0], 
+		end_lng = dest[1]) 
+		for travel_method in lyft_prices:
+			#add lines to seperate max and min to be the parts of the tuple
+			price_ops[travel_method["???"]] = travel_method["???"]
+
 
 	else:
 		#throw an error if you make an invalid request?
@@ -66,6 +96,44 @@ def getPrices(app, start_loc):
 
 	return price_ops
 
+
+
+'''
+Method to get neighboring tiles, within "willing to walk" distance
+-Assumes only in one quadrant of the globe
+
+args: 
+	-center_loc - tuple, (lat, long) point at the center of the hex
+	
+
+Returns:
+	list of tuples representing 6 neighbors
+'''
+def get_neighbors(center_loc):
+
+	c_lat = center_loc[0]
+	c_lng = center_loc[1]
+
+	#conversion factor
+	mi_to_deg = 1/69
+
+	#distance to increment by
+	inc_dist = inc_miles * mi_to_deg
+
+	#for diagonal neighbors
+	v_leg = inc_dist # difference in lat
+	h_leg = (3**0.5) * inc_dist #differnce in long
+
+	top = (c_lat + 2*v_leg, c_lng)
+	bot = (c_lat - 2*v_leg, c_lng)
+	top_R = (c_lat + v_leg, c_lng + h_leg)
+	bot_R = (c_lat - v_leg, c_lng + h_leg)
+	top_L = (c_lat + v_leg, c_lng - h_leg)
+	bot_L = (c_lat - v_leg, c_lng - h_leg)
+	
+	neighbors = [top, bot, top_R, bot_R, top_L, bot_L]
+
+	return neighbors
 
 
 
@@ -82,7 +150,7 @@ class loc_tile (object):
 		self.price_ops = {}
 		for app_option in apps:
 			self.price_ops[app_option] = getPrices(app_option, loc)
-		self.neighbors = getNeighbors(loc)
+		self.neighbors = get_neighbors(loc)
 
 	 
 
@@ -93,7 +161,7 @@ class loc_tile (object):
 Method to create tile
 '''
 def create_tile(loc):
-	return 
+	return loc_tile(loc);
 
 '''
 Method to add tile to price map
