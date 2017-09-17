@@ -73,21 +73,22 @@ def getPrices(app, start_loc):
 		start_longitude = loc[1], 
 		end_latitude = dest[0], 
 		end_longitude = dest[1], 
-		seat_count = 1) #later implementation account for multiple seats
+		seat_count = 1)["prices"] #later implementation account for multiple seats
 
 		for  travel_method in uber_prices:
 			#add in change from strings to floats for uber
-			price_ops[travel_method["display_name"]] = travel_method["estimate"]
-
+			price = ( travel_method["low_estimate"],travel_method["high_estimate"])
+			price_ops[travel_method["display_name"]] = price
 	elif app == "Lyft":
 		#use lyft API to get fare estiamate
 		lyft_prices = lyft_client.get_cost(start_lat = loc[0], 
 		start_lng = loc[1], 
 		end_lat = dest[0], 
-		end_lng = dest[1]) 
+		end_lng = dest[1])["cost_estimates"] 
 		for travel_method in lyft_prices:
 			#add lines to seperate max and min to be the parts of the tuple
-			price_ops[travel_method["???"]] = travel_method["???"]
+			price = (travel_method["estimated_cost_cents_min"]/100.0, travel_method["estimated_cost_cents_max"]/100.0)
+			price_ops[travel_method["ride_type"]] = price
 
 
 	else:
