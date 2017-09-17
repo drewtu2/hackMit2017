@@ -13,3 +13,6 @@ All dependencies can be installed using the command `pip install -r requirements
 source environment
 flask run
 ```
+
+Inline-style: 
+![alt text](https://github.com/drewtu2/hackMit2017/HackMitScreenshot.png "Screenshot of Hack in action")
