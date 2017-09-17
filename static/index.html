@@ -35,10 +35,15 @@
     </div>	 
 	</div>
 
-    <!-- Search box -->
-    <div class="ui input">
-        <input type="text" placeholder="Search...">
-    </div>
+	<script>
+		var input = document.getElementById('pac-input');
+		var searchBox = new google.maps.places.SearchBox(input);
+		map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+	</script>
+
+
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBNv3yuOPpRS5rB8An7ix8K2dTl-XM5UZY&libraries=places&callback=initAutocomplete"
+         	async defer></script>
     
   </body>
 </html>
