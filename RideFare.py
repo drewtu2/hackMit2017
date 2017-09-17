@@ -1,45 +1,50 @@
-import pandas as pd
+#import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+import math
 
 #LYFT CLIENT SETUP
 from lyft_rides.auth import ClientCredentialGrant
-from lyft_rides.session import Session
+from lyft_rides.session import Session as lyftSession
 
-auth_flow = ClientCredentialGrant(client_id=BqM2cwqXmV3w, client_secret=5uDeLNgJNRKb3n9Gg0BMEouzYphZjI9X, scopes=YOUR_PERMISSION_SCOPES)
+auth_flow = ClientCredentialGrant(client_id="BqM2cwqXmV3w", client_secret="5uDeLNgJNRKb3n9Gg0BMEouzYphZjI9X", scopes="public")
+lyft_session = auth_flow.get_session()
 
 from lyft_rides.client import LyftRidesClient
-
-lyft_session = auth_flow.get_session()
 lyft_client = LyftRidesClient(lyft_session)
 #{"token_type": "Bearer", "access_token": "XgOzXKLM6Oj/tTRdyndXpJMC6+UOvXQxAnmNJaaWwY2aJFXWqD2pJLxJ2uPWcmfbL2Y+yL87IFYzT7OE/EEjwf75DEq5U9qfCzplImiACUV91ikGBtuiIqs=", "expires_in": 86400, "scope": "public"}
 #lyft_token = XgOzXKLM6Oj/tTRdyndXpJMC6+UOvXQxAnmNJaaWwY2aJFXWqD2pJLxJ2uPWcmfbL2Y+yL87IFYzT7OE/EEjwf75DEq5U9qfCzplImiACUV91ikGBtuiIqs=
 
 #UBER CLIENT SETUP
-from uber_rides.session import session
+from uber_rides.session import Session as uberSession
 from uber_rides.client import UberRidesClient
 
-uber_token = eWfH_tAQpYHHfVi2nCSFbLrLpoS_69f34ldS63J0
-session = Session(server_token = <uber_token>)
-uber_client = UberRidesClient(session)
+uber_token = "eWfH_tAQpYHHfVi2nCSFbLrLpoS_69f34ldS63J0"
+uberSession = uberSession(server_token = uber_token)
+uber_client = UberRidesClient(uberSession)
 
 #list of apps to look for for price options
 apps = ["Uber", "Lyft"]
 
 #tuple representing destination latitude and longitude
-main_start = (0,0)
-main_dest = (1,1);
+main_start = (42.3601,-71.0942)
+main_dest = (42.3471,-71.0825)
 
 ride_types = ["lyft", "lyft_line", "lyft_plus", "lyft_lux",
+			"POOL", "uberX", "uberXL", "BLACK" ]
 
 
 #Maximum distance user is willing to walk in miles
-MAX_DIST = 5;
-inc_miles = 1;
+MAX_DIST = 5
+inc_miles = 1
 
 
+'''
+Method to get miles in one degree of longitude from latitude
+'''
 
+def get_long_mi(latitude):
+	return math.cos(latitude)*69.172
 
 '''
 Method to get estimated price from app of choicer
@@ -63,7 +68,9 @@ def get_prices(app, start_loc, dest_loc):
 		start_longitude = start_loc[1], 
 		end_latitude = dest_loc[0], 
 		end_longitude = dest_loc[1], 
-		seat_count = 1)["prices"] #later implementation account for multiple seats
+		seat_count = 1) #later implementation account for multiple seats
+
+		print (type(uber_prices), uber_prices.get("uberX"))
 
 		for  travel_method in uber_prices:
 			if travel_method["display_name"] in ride_types:
@@ -109,12 +116,14 @@ def get_neighbors(center_loc):
 	#conversion factor
 	mi_to_deg = 1/69
 
+	lng_conv = 1/get_long_mi(c_lat)
+
 	#distance to increment by
 	inc_dist = inc_miles * mi_to_deg
 
 	#for diagonal neighbors
 	v_leg = inc_dist # difference in lat
-	h_leg = (3**0.5) * inc_dist #differnce in long
+	h_leg = (3**0.5) * inc_miles * lng_conv #differnce in long
 
 	top = (c_lat + 2*v_leg, c_lng)
 	bot = (c_lat - 2*v_leg, c_lng)
@@ -179,7 +188,7 @@ Price Map
 	-neighbors
 		-list of neighboring locations (based either on hex map or own neighbor pints)
 '''
-PriceMap = []
+PriceMap = {}
 
 
 '''
@@ -211,3 +220,8 @@ def buildMap():
 	return PriceMap
 
 
+if __name__ == "__main__":
+	print("testing...\n")
+	print("Base prices: \n")
+	buildMap()
+	print(Price[main_start][main_dest])
