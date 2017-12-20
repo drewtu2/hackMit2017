@@ -1,13 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from time import sleep
-import pickle
 
 #import csv
 import requests
 import threading
 import json
 
-import RideFair as rf
+import RideFare as rf
 
 from datetime import datetime
 from io import StringIO
@@ -45,33 +44,25 @@ def change_loc():
         rf.set_start(new_coord)
     else:
         rf.set_dest(new_coord)
-    
+    rf.buildMap() 
     return jsonify({"status":200});
 
 #change car
 @app.route("/api/ride/", methods=['POST'])
 def change_car():
     ride_type = request.get_json(force=True)
-    return rf.set_car(ride_type)
+    rf.set_car(ride_type)
+    return jsonify({"status":200});
+
 
 #query prices
 @app.route("/api/prices/", methods=['POST'])
 def get_price_list():
 
     params = request.get_json(force=True)
-    prices = rf.query_prices(params["location-role"], params["location"], params["car_pick"])
-    print(prices)
-    return {
-           "keys": lol(prices.keys()),
-           "values": lol(prices.values())}
-# Tuple to List 
-def tuple2List(tup):
-    return [tup[0], [1]]
-
-def lol(lot):
-    alist = []
-    for tup in lot:
-        alist.append(tuple2List(tup))
-        return [tuple2List(tup)]
-
+    print(params)
+    prices = rf.query_price(params["location-role"], params["location"], params["car_pick"])
+    print("Got Prices: " + str(prices))
+    
+    return jsonify(prices[0])
 
