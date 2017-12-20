@@ -25,11 +25,13 @@ def status_file(path):
 #change start or dest
 @app.route("/api/seed/", methods=['POST'])
 def set_loc():
-    coordinates = request.get_json(force=True)
-    #start
-    print(coordinates)
-    rf.set_start(coordinates["startCoord"])
-    rf.set_dest(coordinates["endCoord"])
+    params = request.get_json(force=True)
+    start_coord = params["startCoord"]
+    end_coord = params["endCoord"]
+    print("set_loc: " + str(start_coord[0]) + ", " + str(start_coord[1]))
+    
+    rf.set_start(params["startCoord"])
+    rf.set_dest(params["endCoord"])
     rf.buildMap()
 
     return jsonify({"status":200});

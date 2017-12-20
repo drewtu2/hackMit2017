@@ -59,7 +59,7 @@
     }
     //else map.panTo(myLatlng);
     plotHexagon(map, myLatLng, '#FF0000', 0);
-    generateNeighbors(map, myLatLng, RADIUS);
+    //generateNeighbors(map, myLatLng, RADIUS);
 
     autocompleteCallback();
 }

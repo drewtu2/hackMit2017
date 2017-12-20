@@ -47,7 +47,7 @@ function autocompleteCallback() {
 	  submitLocation(myLatLng, place.geometry.location);
 
 	  plotHexagon(map, place.geometry.location, '#FF0000', 0);
-	  generateNeighbors(map, place.geometry.location, RADIUS);
+	  //generateNeighbors(map, place.geometry.location, RADIUS);
 
 	  var address = '';
 	  if (place.address_components) {
@@ -98,6 +98,7 @@ function updateRideType(ride){
 	xhr.open("POST", "/api/ride/", true);
 	xhr.setRequestHeader('Content-Type', 'application/json');
 	var payload = JSON.stringify({"rideType": ride});
+
 	xhr.onreadystatechange = function() {
 		if (this.readyState == 4 && this.status == 200) {
 			console.log("updateRideType: changed type to " + ride);
@@ -124,8 +125,8 @@ function submitLocation(start_coord, end_coord) {
 	xhr.open("POST", "/api/seed/", true);
 
 	var payload = JSON.stringify({
-		"startCoord": (start_coord.lat(), start_coord.lng()),
-		"endCoord": (end_coord.lat(), end_coord.lng())});
+		"startCoord": [start_coord.lat(), start_coord.lng()],
+		"endCoord": [end_coord.lat(), end_coord.lng()]});
 	xhr.setRequestHeader('Content-Type', 'application/json');
 
 	xhr.onreadystatechange = function() {
@@ -151,5 +152,5 @@ function rideFareApiError(functionName)
 {
 	var errorString = functionName + ": Error!!!"
 	console.log(errorString)
-	display(errorString)
+	window.alert(errorString)
 };

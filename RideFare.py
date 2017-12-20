@@ -216,18 +216,25 @@ class loc_tile (object):
 Method to change destination location
 '''
 def set_start(st_loc):
-    main_start = st_loc
+    print("set_start: " + str(st_loc))
+    main_start = (st_loc[0], st_loc[1])
+    print("main_start: " + str(main_start))
+    print("main_dest: " + str(main_dest))
 
 '''
 Method to change destination location
 '''
 def set_dest(des_loc):
-    main_dest = des_loc
+    print("set_dest: " + str(des_loc))
+    main_dest = (des_loc[0], des_loc[1])
+    print("main_start: " + str(main_start))
+    print("main_dest: " + str(main_dest))
 
 '''
 Method to set car choice
 '''
 def set_car(your_ride):
+    print("set_car: " + str(your_ride))
     main_car_choice = your_ride
 
 
@@ -274,16 +281,22 @@ Returns:
 3D dictionary of prices based on starts, ends, and ride types
 '''
 def buildMap(p2p=True):
+    print("main_start: " + str(main_start))
+    print("main_dest: " + str(main_dest))
     pos_starts = [main_start]
     pos_ends = [main_dest]
 
+    # If we're looking for more than just a start and end location, increase
+    # the number of nodes we're searching across
     if not p2p:
         pos_starts.extend(get_neighbors(main_start))
         pos_ends.extend(get_neighbors(main_dest))
 
     for index in range(len(pos_starts)):
+        print(str(index) + ": " + str(pos_starts[index]))
         start_map[index] = pos_starts[index]
         end_map[index] = pos_ends[index]
+        print(start_map)
 
     for st in pos_starts:
         PriceMap[st]= {}
@@ -292,7 +305,8 @@ def buildMap(p2p=True):
             for app in apps:
                 PriceMap[st][end].update(get_prices(app, st, end))
             #print (PriceMap[st][end])
-
+    
+    print("buildMap: " + str(start_map))
     return PriceMap
     
 
@@ -315,6 +329,7 @@ returns:
 def query_price(loc_role, loc_num, car_pick):
     price_results = {}
     cars = car_choices[car_pick] # Will be length of num apps
+    print("Query price: " + str(start_map))
     
     if loc_role == "start":
         try:
