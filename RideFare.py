@@ -24,6 +24,125 @@ uberSession = uberSession(server_token = uber_token)
 uber_client = UberRidesClient(uberSession)
 
 
+class RideFare:
+    apps = ["Uber", "Lyft"]
+
+    # TODO: Eliminate one of these (double data)
+    car_choices = {"reg": ["uberX","lyft"], "shared":["uberPOOL", "lyft_line"], 
+                "fancy": ["UberBLACK", "lyft_lux"], "big": ["uberXL", "lyft_plus"]}
+    RIDE_TYPES = ["lyft", "lyft_line", "lyft_plus", "lyft_lux",
+            "uberPOOL", "uberX", "uberXL", "UberBLACK" ]
+    inc_miles = .125
+
+    def __init__():
+        self.start = start_location
+        self.destination = destination_location
+        self.car_choice = car_choice
+        self.start_map = {}
+        self.end_map = {}
+
+    '''
+    Method to get estimated price from app of choicer
+    
+    args:
+        -app: string representing which app pricing you're looking for
+        -start_loc: tuple of (lat, long) of starting location
+    
+    Returns:
+        dictionary mapping travel options to price estimates {"string": tuple of 
+        floats (min, max)}
+    
+    '''
+    def get_prices(self):
+        #dictionary which will map travel options to prices
+        #i.e. "UberPool: $1000 "
+        price_ops = {}
+        if self.app == "Uber":
+            price_ops = self.get_prices_uber()
+        elif self.app == "Lyft":
+            price_ops = get_prices_lyft()
+        else:
+            #throw an error if you make an invalid request?
+            print("Error: Invalid app name...")
+            return None
+    
+        return price_ops
+    
+    '''
+    Helper function to get prices for Uber
+    args:
+        -app: string representing which app pricing you're looking for
+        -start_loc: tuple of (lat, long) of starting location
+    
+    Returns:
+        dictionary mapping travel options to price estimates {"string": tuple 
+        of floats (min, max)}
+    '''
+    def get_prices_uber(self):
+        price_ops = {}
+        #use Uber API commands to get fare estimate
+        uber_prices = uber_client.get_price_estimates(
+            start_latitude = self.start[0], 
+            start_longitude = start[1], 
+            end_latitude = self.destination[0], 
+            end_longitude = self.destination[1], 
+            seat_count = 1).json["prices"] # TODO: later implementation account for multiple seats
+    
+        #print (type(uber_prices), uber_prices)
+    
+        for  travel_method in uber_prices:
+            if travel_method["display_name"] in self.RIDE_TYPES:
+                price = (travel_method["low_estimate"], travel_method["high_estimate"])
+                price_ops[travel_method["display_name"]] = price
+            else:
+                #print(travel_method["display_name"])
+                pass
+        return price_ops
+    
+    '''
+    Helper function for get prices for Lyft
+    args:
+        -app: string representing which app pricing you're looking for
+        -start_loc: tuple of (lat, long) of starting location
+    
+    Returns:
+        dictionary mapping travel options to price estimates {"string": tuple of floats (min, max)}
+    '''
+    def get_prices_lyft(app, start_loc, dest_loc):
+        price_ops = {}
+        #use lyft API to get fare estiamate
+        # lyft_prices = lyft_client.get_cost_estimates(start_latitude = start_loc[0], 
+        # start_longitude = start_loc[1], 
+        # end_latitude = dest_loc[0], 
+        # end_longitude = dest_loc[1])#.json["cost_estimates"] 
+        start_latitude = start_loc[0] 
+        start_longitude = start_loc[1] 
+        end_latitude = dest_loc[0] 
+        end_longitude = dest_loc[1]
+    
+        #lyft_url = "https://api.lyft.com/v1/cost?ride_type=lyft&start_lat="+str(start_latitude)+"&start_lng="+str(start_longitude)+"&end_lat="+str(end_latitude)+"&end_lng="+str(end_longitude)
+        lyft_url = "https://api.lyft.com/v1/cost?start_lat=" + str(start_latitude)\
+            + "&start_lng=" + str(start_longitude) \
+            + "&end_lat=" + str(end_latitude) \
+            + "&end_lng=" + str(end_longitude)
+    
+        lyft_request = requests.get(lyft_url, headers={'Authorization': "Bearer "+lyft_token})
+        lyft_prices = lyft_request.json()["cost_estimates"]
+        #print(lyft_prices)
+    
+        for travel_method in lyft_prices:
+            # Only looking for certain types of rides 
+            if travel_method["ride_type"] in RIDE_TYPES:
+                price = (travel_method["estimated_cost_cents_min"]/100.0, 
+                        travel_method["estimated_cost_cents_max"]/100.0)
+                price_ops[travel_method["ride_type"]] = price
+            else:
+                #print (travel_method["ride_type"])
+                #print(travel_method["display_name"])
+                pass
+        return price_ops
+
+    
 
 # list of apps to look for for price options
 apps = ["Uber", "Lyft"]

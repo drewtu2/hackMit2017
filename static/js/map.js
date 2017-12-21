@@ -17,10 +17,9 @@
 /*
  * initGeolocation()
  * Starts the geolocation funcitons.
- *
  */
   function initGeolocation() {
-	  console.log("Hello world");
+	  console.log("Starting Geolocation");
 
     if (navigator && navigator.geolocation) {
     /*var watchId = navigator.geolocation.watchPosition(successCallback,
@@ -32,13 +31,11 @@
     } else {
       console.log('Geolocation is not supported');
     }
-    console.log("goodbye world");
-    console.log(map);
 
   }
 
   function errorCallback() {
-	  console.log("Error with locaiton tracking...")
+	  console.log("Error with location tracking...")
   }
 
   /*
@@ -47,7 +44,8 @@
   function successCallback(position) {
 
     myLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-	//myLatLng = new google.maps.LatLng(42.340108, -71.088185);
+	  //myLatLng = new google.maps.LatLng(42.340108, -71.088185);
+
     // To be run the first time the callback is called. (Creates the map object)
     if(map == undefined) {
       var myOptions = {
@@ -66,8 +64,8 @@
 
 	/*
 	 * Generates a hexagon and its neighbors on a map
-	 * 			1
-	 *   	 *******
+	 * 			    1
+	 *   	   *******
 	 *   6  *       *   2
 	 *     *    *C   *
 	 *   5  *       *  3
