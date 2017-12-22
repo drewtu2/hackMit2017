@@ -14,5 +14,9 @@ source environment
 flask run
 ```
 
-Inline-style: 
-![alt text](https://github.com/drewtu2/hackMit2017/HackMitScreenshot.png "Screenshot of Hack in action")
+![The Hack in Action!](HackMitScreenshot.png)
+
+# TODO:
+- get API keys for gogole maps to allow this to work on heroku
+- find work around for SSL connection preventing location services from working
+- refactor codebase to OOD
