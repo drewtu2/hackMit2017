@@ -28,13 +28,17 @@ def set_loc():
     params = request.get_json(force=True)
     start_coord = params["startCoord"]
     end_coord = params["endCoord"]
+    MyPriceMap = {}
+    
+
     print("set_loc: " + str(start_coord[0]) + ", " + str(start_coord[1]))
     
-    rf.set_start(params["startCoord"])
-    rf.set_dest(params["endCoord"])
-    rf.buildMap()
-
-    return jsonify({"status":200});
+    #rf.set_start(params["startCoord"])
+    #rf.set_dest(params["endCoord"])
+    
+    MyPriceMap = rf.buildMap(start_loc = start_coord, end_loc = end_coord)
+    pmap_json = rf.PriceMap2Json(MyPriceMap)
+    return jsonify(pmap_json);
 
 #change loc
 @app.route("/api/change_loc/", methods=['POST'])

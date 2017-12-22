@@ -1,4 +1,25 @@
-var map;
+
+var map;							// The GoogleMaps Map Object
+
+/*
+JSON representing all the prices calculated
+[query1, query2, query3...]
+
+PriceQuery is a dictionary with 3 named field:
+{   "start_loc": [lat, long],
+    "end_loc": [lat, long],
+    "prices": <entry>
+}
+An entry is dictionary of ride types to prices
+{'ride_type': [Uber Price, Lyft Price], ...}
+
+Coordinate is a 2 element list containing lat and long
+[lat, long]
+
+Prices is a 2 element list containing prices for Uber and Lyft
+[Uber Price, Lyft Price]
+*/
+var pmap_json;
 
 function autocompleteCallback() {
 	var card = document.getElementById('pac-card');
@@ -46,8 +67,8 @@ function autocompleteCallback() {
 
 	  submitLocation(myLatLng, place.geometry.location);
 
-	  plotHexagon(map, place.geometry.location, '#FF0000', 0);
-	  //generateNeighbors(map, place.geometry.location, RADIUS);
+	  plotHexagon(map, place.geometry.location, '#FF0000', 0, "dest");
+	  //generateNeighbors(map, place.geometry.location, RADIUS, "dest");
 
 	  var address = '';
 	  if (place.address_components) {
@@ -87,11 +108,10 @@ function autocompleteCallback() {
 
 }
 
-/*
+/**
  * Send the ride type.
- * {
- * 	rideType:"something"
- *  }
+ *
+ * @param ride a string representing what type of ride is being requested. 
  */
 function updateRideType(ride){
 	var xhr = new XMLHttpRequest();
@@ -113,12 +133,11 @@ function updateRideType(ride){
 	PICK = ride;
 };
 
-/*
+/**
  * Submit the location and ride type.
- * {
- * 	start_coord:(lat, lng),
- * 	end_coord:(lat,lng)
- *  }
+ *
+ * @param start_coord 	(lat, lng)
+ * @param	end_coord 		(lat,lng)
  */
 function submitLocation(start_coord, end_coord) {
 	var xhr = new XMLHttpRequest();
@@ -133,6 +152,8 @@ function submitLocation(start_coord, end_coord) {
 		if (this.readyState == 4 && this.status == 200) {
 			console.log("submitLocation: seeded with start:" + start_coord
 			+ " end: " + end_coord)
+			pmap_json = JSON.parse(this.response)
+			console.log(pmap_json)
 		}
 		else if (this.readyState == 4 && this.status != 200) {
 			rideFareApiError("submitLocation")

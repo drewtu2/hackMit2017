@@ -81,15 +81,16 @@ class RideFare:
     def get_prices_uber(self):
         price_ops = {}
         #use Uber API commands to get fare estimate
-        uber_prices = uber_client.get_price_estimates(
-            start_latitude = self.start[0], 
-            start_longitude = start[1], 
-            end_latitude = self.destination[0], 
-            end_longitude = self.destination[1], 
-            seat_count = 1).json["prices"] # TODO: later implementation account for multiple seats
-    
-        #print (type(uber_prices), uber_prices)
-    
+        try:
+            uber_prices = uber_client.get_price_estimates(
+                start_latitude = self.start[0], 
+                start_longitude = start[1], 
+                end_latitude = self.destination[0], 
+                end_longitude = self.destination[1], 
+                seat_count = 1).json["prices"] # TODO: later implementation account for multiple seats
+        except: 
+            print("get_prices_uber: error getting prices")
+
         for  travel_method in uber_prices:
             if travel_method["display_name"] in self.RIDE_TYPES:
                 price = (travel_method["low_estimate"], travel_method["high_estimate"])
@@ -155,10 +156,10 @@ start_map = {}
 end_map = {}
 
 car_choices = {"reg": ["uberX","lyft"], "shared":["uberPOOL", "lyft_line"], 
-                "fancy": ["UberBLACK", "lyft_lux"], "big": ["uberXL", "lyft_plus"]}
+                "fancy": ["uberBLACK", "lyft_lux"], "big": ["uberXL", "lyft_plus"]}
 
 RIDE_TYPES = ["lyft", "lyft_line", "lyft_plus", "lyft_lux",
-            "uberPOOL", "uberX", "uberXL", "UberBLACK" ]
+            "uberPOOL", "uberX", "uberXL", "uberBLACK" ]
 
 
 #Maximum distance user is willing to walk in miles
@@ -224,7 +225,7 @@ def get_prices_uber(app, start_loc, dest_loc):
             price = (travel_method["low_estimate"], travel_method["high_estimate"])
             price_ops[travel_method["display_name"]] = price
         else:
-            #print(travel_method["display_name"])
+            print(travel_method["display_name"])
             pass
     return price_ops
 
@@ -266,8 +267,7 @@ def get_prices_lyft(app, start_loc, dest_loc):
                     travel_method["estimated_cost_cents_max"]/100.0)
             price_ops[travel_method["ride_type"]] = price
         else:
-            #print (travel_method["ride_type"])
-            #print(travel_method["display_name"])
+            print (travel_method["ride_type"])
             pass
     return price_ops
 
@@ -399,17 +399,16 @@ args:
 Returns:
 3D dictionary of prices based on starts, ends, and ride types
 '''
-def buildMap(p2p=True):
-    print("main_start: " + str(main_start))
-    print("main_dest: " + str(main_dest))
-    pos_starts = [main_start]
-    pos_ends = [main_dest]
+def buildMap(p2p=True, start_loc = main_start, end_loc = main_dest):
+    MyPriceMap = {}
+    pos_starts = [list2tuple(start_loc)]
+    pos_ends = [list2tuple(end_loc)]
 
     # If we're looking for more than just a start and end location, increase
     # the number of nodes we're searching across
     if not p2p:
-        pos_starts.extend(get_neighbors(main_start))
-        pos_ends.extend(get_neighbors(main_dest))
+        pos_starts.extend(get_neighbors(list2tuple(start_loc)))
+        pos_ends.extend(get_neighbors(list2tuple(end_loc)))
 
     for index in range(len(pos_starts)):
         print(str(index) + ": " + str(pos_starts[index]))
@@ -418,15 +417,17 @@ def buildMap(p2p=True):
         print(start_map)
 
     for st in pos_starts:
-        PriceMap[st]= {}
+        MyPriceMap[st]= {}
         for end in pos_ends:
-            PriceMap[st][end]={}
+            MyPriceMap[st][end]={}
             for app in apps:
-                PriceMap[st][end].update(get_prices(app, st, end))
-            #print (PriceMap[st][end])
+                MyPriceMap[st][end].update(get_prices(app, st, end))
+            #print (MyPriceMap[st][end])
     
     print("buildMap: " + str(start_map))
-    return PriceMap
+    print()
+    print("buildMap: " + str(MyPriceMap))
+    return MyPriceMap
     
 
 '''
@@ -521,9 +522,14 @@ def PriceMap2Json(myMap):
     for start_loc in myMap:
         for end_loc in myMap[start_loc]:
             json_entry = {}
-            for ride_type in myMap[start_loc][end_loc]:
-                price_tuple = myMap[start_loc][end_loc][ride_type]
-                json_entry[ride_type] = [price_tuple[0], price_tuple[1]]
+            # Iterate through the options in car_choice (shared, standard, fancy, etc...)
+            for level in car_choices:
+                # (uber_pool, lyft_line)
+                vendor_level = car_choices[level]
+                entry = myMap[start_loc][end_loc]
+                # (uber_choice_high_price, lyft_choice_high_price)
+                price_tuple = (entry[vendor_level[0]][1], entry[vendor_level[1]][1])
+                json_entry[level] = [price_tuple[0], price_tuple[1]]
                         
             json_start_loc = [start_loc[0], start_loc[1]]
             json_end_loc = [end_loc[0], end_loc[1]]
@@ -533,13 +539,16 @@ def PriceMap2Json(myMap):
                     "prices":json_entry}
             json_map.append(this_query)
 
-    print(json_map)
+    print("json_map: " + str(json_map))
     return json_map
+
+def list2tuple(myList):
+    return (myList[0], myList[1])
 
 
 if __name__ == "__main__":
     print("Base prices: \n")
-    buildMap()
+    PriceMap = buildMap()
     
     #print(PriceMap[main_start][main_dest])
     #print()

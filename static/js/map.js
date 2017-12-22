@@ -72,7 +72,7 @@
 	 *       *******
 	 *          4
 	 */
-	function generateNeighbors(input_map, point, radius) {
+	function generateNeighbors(input_map, point, radius, loc_role="start") {
 
 		var conv = latLngDecConv(point.lat(), 30);
 		//console.log(conv);
@@ -99,16 +99,20 @@
 		var i= 1
 		for (var neighbor in neighbors) {
 			//console.log(neighbor);
-			plotHexagon(input_map, neighbors[neighbor], 'DarkGreen',i);
+			plotHexagon(input_map, neighbors[neighbor], 'DarkGreen',i, loc_role);
 			i +=1;
 		}
 
 
 	}
 
-	/*
+	/**
 	 * Creates a hexagon of a given color from a set of points. Places on a given map.
-	 *
+	 * @param input_map The map object this hexagon is being put on
+   * @param point     The coordinate of the center of the hexagon
+   * @param color     The color that this hexagon should be
+   * @param _id       The hexagon id number (0-6)
+   * @param loc_role  A string, either "start" or "dest" saying which hexagon this belongs to
 	 */
   function plotHexagon(input_map, point, color, _id, loc_role="start") {
 	  var hexagonVerticies = generateHexagon(point, RADIUS);
@@ -124,50 +128,48 @@
 
 	  hexagon.addListener('mouseover', darkenOpacity);
 		hexagon.addListener('mouseout', lightenOpacity);
-		hexagon.addListener('click', function(e){getPrices(_id, loc_role, PICK,e)});
+		hexagon.addListener('click', function(e){getPrices(point, loc_role, PICK,e)});
     hexagon.setMap(input_map);
   }
 
-  /*
-   * location: 0-6
-   * location_role: "start" or "dest"
-   * car_pick: "shared", "reg", "big", "fancy"
+  /**
+   * Handles displying the price for a given tile. Callback function when tile is
+   * clicked
+   * @param tile_coords         The coordinates of the tile that was clicked
+   * @param location_role       "start" or "dest"
+   * @param ride                "shared", "reg", "big", "fancy"
    */
-  function getPrices(localll, location_role, ride) {
-  	var xhr = new XMLHttpRequest();
-  	xhr.open("POST", "/api/prices/", true);
+  function getPrices(tile_coords, location_role, ride) {
+    if(location_role == "dest"){
+      console.log("getPrices: search for destination")
 
-  	var payload = JSON.stringify({
-  		"location": localll,
-  		"location-role": location_role,
-  		"car_pick": ride});
+      for (var query in pmap_json) {
+        var query_dest = pmap_json[query]["end_loc"];
+        console.log(query_dest)
+        query_dest = list2latlng(query_dest);
+        console.log(query_dest)
+        // If this query is the correct query
+        if(query_dest.equals(tile_coords))
+        {
+          var prices = pmap_json[query]["prices"];
+          console.log(prices)
+          var ride_prices = prices[ride];
+          console.log(ride_prices)
+          // ride_prices = [Uber Price, Lyft Price]
 
-  	console.log(payload);
-  	xhr.setRequestHeader('Content-Type', 'application/json');
+          displayPrice(ride_prices[0], ride_prices[1], ride);
+        }
 
-  	xhr.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            console.log("response");
-            console.log(this.response)
-            console.log("Location Id: " + localll);
+      }
 
-            //[uberPrice, lyftPrice]
-            prices = JSON.parse(this.response)["prices"]
-
-            displayPrice(prices[0], prices[1], ride)
-       }
-     	 else if (this.readyState == 4 && this.status != 200) {
-     			rideFareApiError("getPrices")
-     	}
-    };
-
-  	xhr.send(payload);
-
-
+    } else {
+      console.log("getPrices: search for origin")
+        // Do nothing for now...
+    }
   };
 
-  function displayPrice(uber, lyft, mode="shared"){
-	 window.alert(mode + " Ride\nUber: $" + uber + "\nLyft: $" + lyft);
+  function displayPrice(uber, lyft, ride="shared"){
+	 window.alert(ride + " Ride\nUber: $" + uber + "\nLyft: $" + lyft);
   }
 
  /*
@@ -235,3 +237,38 @@
 	  var polygonOptions = {fillOpacity: 0.35};
 	  this.setOptions(polygonOptions);
   }
+
+  /**
+   * Takes a list object of length 2 and returns a google maps latLng
+   * @param myList The list in the format [lat, lng]
+   * @return a google.maps.LatLng Object
+   */
+   function list2latlng(myList) {
+     assert(Array.isArray(myList), "list2latlng: Given list is not a list");
+     assert(myList.length == 2, "list2latlng: Given list is wrong size");
+
+     var myCoord = new google.maps.LatLng(myList[0], myList[1]);
+
+     console.log("list2latlng: " + myList)
+     console.log("list2latlng: " + myList[0] + ", " + myList[1])
+     return myCoord;
+   }
+
+   /**
+    * Throws an error if a given condition is not met. A given message is used.
+    * If no message is provided, the error message is "Assertion Failed"
+    * @param condition  A boolean representing the condition
+    * @param message    A string for the error message
+    *
+    */
+   function assert(condition, message){
+     if (!condition){
+       message = message || "Assertion Failed"
+
+        if (typeof Error !== "undefined") {
+            throw new Error(message);
+        }
+        throw message; // Fallback
+
+     }
+   }
