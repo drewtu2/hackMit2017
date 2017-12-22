@@ -1,1 +1,1 @@
-web: source environment; flask run
+web: flask run
