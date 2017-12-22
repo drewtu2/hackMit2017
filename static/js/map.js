@@ -62,7 +62,7 @@
     autocompleteCallback();
 }
 
-	/*
+	/**
 	 * Generates a hexagon and its neighbors on a map
 	 * 			    1
 	 *   	   *******
@@ -71,6 +71,11 @@
 	 *   5  *       *  3
 	 *       *******
 	 *          4
+   * @param input_map   The input_map that the hexagon will be plotted on
+   * @param points      The coordinates for the center point of the hexagon
+   * @param radius      The distance from the center of the hexagon to the edges
+   * @param loc_role     A string represetng whether the hexagons are the start or Destination
+   * @return a list of the hexagon objects created from this call
 	 */
 	function generateNeighbors(input_map, point, radius, loc_role="start") {
 
@@ -97,13 +102,16 @@
 				lng: point.lng() - (2 * radius * conv.diag_x)})
 		}
 		var i= 1
+    var hexagons = []
+
 		for (var neighbor in neighbors) {
 			//console.log(neighbor);
-			plotHexagon(input_map, neighbors[neighbor], 'DarkGreen',i, loc_role);
+			var hexagon = plotHexagon(input_map, neighbors[neighbor], 'DarkGreen',i, loc_role);
+      hexagons.push(hexagon)
 			i +=1;
 		}
 
-
+    return hexagons;
 	}
 
 	/**
@@ -113,6 +121,7 @@
    * @param color     The color that this hexagon should be
    * @param _id       The hexagon id number (0-6)
    * @param loc_role  A string, either "start" or "dest" saying which hexagon this belongs to
+   * @return          The hexagon created
 	 */
   function plotHexagon(input_map, point, color, _id, loc_role="start") {
 	  var hexagonVerticies = generateHexagon(point, RADIUS);
@@ -130,6 +139,7 @@
 		hexagon.addListener('mouseout', lightenOpacity);
 		hexagon.addListener('click', function(e){getPrices(point, loc_role, PICK,e)});
     hexagon.setMap(input_map);
+    return hexagon;
   }
 
   /**

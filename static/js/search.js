@@ -1,5 +1,6 @@
 
 var map;							// The GoogleMaps Map Object
+var hexagons;					// An array of hexagon objects from the last search
 
 /*
 JSON representing all the prices calculated
@@ -65,10 +66,12 @@ function autocompleteCallback() {
 	  marker.setPosition(place.geometry.location);
 	  marker.setVisible(true);
 
+		clearHexagons();
 	  submitLocation(myLatLng, place.geometry.location);
 
-	  plotHexagon(map, place.geometry.location, '#FF0000', 0, "dest");
-	  //generateNeighbors(map, place.geometry.location, RADIUS, "dest");
+	  destinationHexagon = plotHexagon(map, place.geometry.location, '#FF0000', 0, "dest");
+		hexagons.push(destinationHexagon);
+	  //hexagons.concat(generateNeighbors(map, place.geometry.location, RADIUS, "dest"));
 
 	  var address = '';
 	  if (place.address_components) {
@@ -111,7 +114,7 @@ function autocompleteCallback() {
 /**
  * Send the ride type.
  *
- * @param ride a string representing what type of ride is being requested. 
+ * @param ride a string representing what type of ride is being requested.
  */
 function updateRideType(ride){
 	var xhr = new XMLHttpRequest();
@@ -175,3 +178,21 @@ function rideFareApiError(functionName)
 	console.log(errorString)
 	window.alert(errorString)
 };
+
+/**
+ * Removes the destination hexagons from the map, then removes them from the
+ * global list
+ */
+ function clearHexagons()
+ {
+	 console.log(hexagons)
+	 // Clear the hexagons from the maps
+	 for (hexagon_index in hexagons)
+	 {
+		  console.log(hexagon_index)
+		 	hexagons[hexagon_index].setMap(null)
+	 }
+
+	 // Clear the hexagons from memory
+	 hexagons = []
+ }
