@@ -17,7 +17,7 @@ app = Flask(__name__, static_url_path="")
 
 @app.route("/")
 def run_app():
-    return "Hello, world"
+    return app.send_static_file("index.html")
 
 @app.route("/<path:path>")
 def status_file(path):
