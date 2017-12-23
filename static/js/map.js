@@ -9,6 +9,7 @@
   var myLatLng
   var RADIUS = .125;
   var PICK = "shared";
+  var GOOGLEMAP_KEY = "AIzaSyCYvuaKW3QmNRINhwOaPnT1A3266RtP-N8"
 
   $(document).ready(function(){
 
@@ -34,9 +35,36 @@
 
   }
 
-  function errorCallback() {
-	  console.log("Error with location tracking...")
+  function errorCallback(error) {
+    // Trying
+    switch (error.code) {
+      case error.TIMEOUT:
+        alert("Browser geolocation error !\n\nTimeout.");
+        break;
+      case error.PERMISSION_DENIED:
+        if(error.message.indexOf("Only secure origins are allowed") == 0) {
+	        console.log("Error with browser location tracking... Trying GoogleMap API")
+          tryAPIGeolocation();
+        }
+        break;
+      case error.POSITION_UNAVAILABLE:
+        alert("Browser geolocation error !\n\nPosition unavailable.");
+        break;
+    }
   }
+
+  var tryAPIGeolocation = function() {
+      jQuery.post("https://www.googleapis.com/geolocation/v1/geolocate?key=" + GOOGLEMAP_KEY,
+      function(success) {
+          var position;
+          position.coords.latitude = success.location.lat;
+          position.coords.longitude = success.location.lng;
+          successCallback(position);
+      })
+    .fail(function(err) {
+      alert("API Geolocation error! \n\n"+err);
+    });
+  };
 
   /*
    * Callback function for the navigator.geolocation.watchPosition() function.
