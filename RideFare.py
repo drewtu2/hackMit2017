@@ -156,10 +156,10 @@ start_map = {}
 end_map = {}
 
 car_choices = {"reg": ["uberX","lyft"], "shared":["uberPOOL", "lyft_line"], 
-                "fancy": ["uberBLACK", "lyft_lux"], "big": ["uberXL", "lyft_plus"]}
+                "fancy": ["UberBLACK", "lyft_lux"], "big": ["uberXL", "lyft_plus"]}
 
 RIDE_TYPES = ["lyft", "lyft_line", "lyft_plus", "lyft_lux",
-            "uberPOOL", "uberX", "uberXL", "uberBLACK" ]
+            "uberPOOL", "uberX", "uberXL", "UberBLACK" ]
 
 
 #Maximum distance user is willing to walk in miles
@@ -472,13 +472,16 @@ def query_price(loc_role, loc_num, car_pick):
     elif loc_role == "dest":
         loc_coords = end_map[loc_num]
         #go through and find prices with this end node
-        for start in PriceMap:
-            found_prices = [None, None]
-            for index in len(cars):
-                if cars[index] in PriceMap[start][loc_coords].keys():
-                    min_price = PriceMap[start][loc_coords][cars[index]][0]
-                    found_prices[index] = float(min_price)
-            price_results[start] = tuple(found_prices)
+        try:
+            for start in PriceMap:
+                found_prices = [None, None]
+                for index in len(cars):
+                    if cars[index] in PriceMap[start][loc_coords].keys():
+                        min_price = PriceMap[start][loc_coords][cars[index]][0]
+                        found_prices[index] = float(min_price)
+                price_results[start] = tuple(found_prices)
+        except:
+            print("query_price: Error in data conversion")
     else:
         #throw error saying, invalid entry
         print ("Invalid request.")
@@ -523,21 +526,24 @@ def PriceMap2Json(myMap):
         for end_loc in myMap[start_loc]:
             json_entry = {}
             # Iterate through the options in car_choice (shared, standard, fancy, etc...)
-            for level in car_choices:
-                # (uber_pool, lyft_line)
-                vendor_level = car_choices[level]
-                entry = myMap[start_loc][end_loc]
-                # (uber_choice_high_price, lyft_choice_high_price)
-                price_tuple = (entry[vendor_level[0]][1], entry[vendor_level[1]][1])
-                json_entry[level] = [price_tuple[0], price_tuple[1]]
-                        
-            json_start_loc = [start_loc[0], start_loc[1]]
-            json_end_loc = [end_loc[0], end_loc[1]]
+            try:
+                for level in car_choices:
+                    # (uber_pool, lyft_line)
+                    vendor_level = car_choices[level]
+                    entry = myMap[start_loc][end_loc]
+                    # (uber_choice_high_price, lyft_choice_high_price)
+                    price_tuple = (entry[vendor_level[0]][1], entry[vendor_level[1]][1])
+                    json_entry[level] = [price_tuple[0], price_tuple[1]]
+                            
+                json_start_loc = [start_loc[0], start_loc[1]]
+                json_end_loc = [end_loc[0], end_loc[1]]
 
-            this_query = {"start_loc":json_start_loc, 
-                    "end_loc":json_end_loc,
-                    "prices":json_entry}
-            json_map.append(this_query)
+                this_query = {"start_loc":json_start_loc, 
+                        "end_loc":json_end_loc,
+                        "prices":json_entry}
+                json_map.append(this_query)
+            except:
+                print("PriceMap2Json: error converting to json")
 
     print("json_map: " + str(json_map))
     return json_map
