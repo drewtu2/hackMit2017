@@ -56,9 +56,7 @@
   var tryAPIGeolocation = function() {
       jQuery.post("https://www.googleapis.com/geolocation/v1/geolocate?key=" + GOOGLEMAP_KEY,
       function(success) {
-          var position;
-          position.coords.latitude = success.location.lat;
-          position.coords.longitude = success.location.lng;
+          var position = {coords: {latitude: success.location.lat, longitude: success.location.lng}}
           successCallback(position);
       })
     .fail(function(err) {
