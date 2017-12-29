@@ -17,13 +17,13 @@ app = Flask(__name__, static_url_path="")
 
 @app.before_request
 def before_request():
-    if not request.is_secure:
+    if request.url.startswith('http://'):
         url = request.url.replace('http://', 'https://', 1)
-        print("Request insecure.... redirecting to " + str(url))
+        print("HTTP request received.... redirecting to " + str(url))
         code = 301
         return redirect(url, code=code)
     else:
-        print("Secure request received....")
+        print("HTTPS request received....")
 
 @app.route("/")
 def run_app():
