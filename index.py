@@ -20,7 +20,7 @@ def before_request():
     if request.is_secure:
         url = request.url.replace('http://', 'https://', 1)
         code = 301
-    return redirect(url, code=code)
+        return redirect(url, code=code)
 
 @app.route("/")
 def run_app():
