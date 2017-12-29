@@ -5,3 +5,4 @@ __pycache__
 *.swp
 api_keys
 .env
+RideFare.pyc
