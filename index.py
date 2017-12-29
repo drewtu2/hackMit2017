@@ -17,7 +17,7 @@ app = Flask(__name__, static_url_path="")
 
 @app.before_request
 def before_request():
-    if request.is_secure():
+    if request.is_secure:
         url = request.url.replace('http://', 'https://', 1)
         code = 301
     return redirect(url, code=code)
