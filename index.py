@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, Response, redirect
+from flask_sslify import SSLify
 from time import sleep
 
 #import csv
@@ -15,15 +16,18 @@ from io import StringIO
 app = Flask(__name__, static_url_path="")
 # NOT needed for demo
 
-@app.before_request
-def before_request():
-    if request.url.startswith('http://'):
-        url = request.url.replace('http://', 'https://', 1)
-        print("HTTP request received.... redirecting to " + str(url))
-        code = 301
-        return redirect(url, code=code)
-    else:
-        print("HTTPS request received....")
+if 'DYNO' in os.environ:
+    sslify=SSLify(app)
+
+#@app.before_request
+#def before_request():
+#    if request.url.startswith('http://'):
+#        url = request.url.replace('http://', 'https://', 1)
+#        print("HTTP request received.... redirecting to " + str(url))
+#        code = 301
+#        return redirect(url, code=code)
+#    else:
+#        print("HTTPS request received....")
 
 @app.route("/")
 def run_app():
