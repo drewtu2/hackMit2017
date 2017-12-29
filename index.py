@@ -15,6 +15,13 @@ from io import StringIO
 app = Flask(__name__, static_url_path="")
 # NOT needed for demo
 
+@app.before_request
+def before_request():
+    if request.url.startswith('http://'):
+        url = request.url.replace('http://', 'https://', 1)
+        code = 301
+    return redirect(url, code=code)
+
 @app.route("/")
 def run_app():
     return app.send_static_file("index.html")
