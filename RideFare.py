@@ -4,6 +4,7 @@ import numpy as np
 import math
 import requests
 import os
+import logging
 
 # LYFT CLIENT SETUP
 from lyft_rides.auth import ClientCredentialGrant
@@ -63,7 +64,7 @@ class RideFare:
             price_ops = get_prices_lyft()
         else:
             #throw an error if you make an invalid request?
-            print("Error: Invalid app name...")
+            logging.error("Error: Invalid app name...")
             return None
     
         return price_ops
@@ -89,7 +90,7 @@ class RideFare:
                 end_longitude = self.destination[1], 
                 seat_count = 1).json["prices"] # TODO: later implementation account for multiple seats
         except: 
-            print("get_prices_uber: error getting prices")
+            logging.error("get_prices_uber: error getting prices")
 
         for  travel_method in uber_prices:
             if travel_method["display_name"] in self.RIDE_TYPES:
@@ -143,7 +144,9 @@ class RideFare:
                 pass
         return price_ops
 
-    
+"""
+Current implementation (w/o ood)
+"""
 
 # list of apps to look for for price options
 apps = ["Uber", "Lyft"]
@@ -155,11 +158,11 @@ main_car_choice = "reg"
 start_map = {}
 end_map = {}
 
-car_choices = {"reg": ["uberX","lyft"], "shared":["uberPOOL", "lyft_line"], 
-                "fancy": ["UberBLACK", "lyft_lux"], "big": ["uberXL", "lyft_plus"]}
+car_choices = {"reg": ["uberx","lyft"], "shared":["uberpool", "lyft_line"], 
+                "fancy": ["uberblack", "lyft_lux"], "big": ["uberxl", "lyft_plus"]}
 
 RIDE_TYPES = ["lyft", "lyft_line", "lyft_plus", "lyft_lux",
-            "uberPOOL", "uberX", "uberXL", "UberBLACK" ]
+            "uberpool", "uberx", "uberxl", "uberblack" ]
 
 
 #Maximum distance user is willing to walk in miles
@@ -195,7 +198,7 @@ def get_prices(app, start_loc, dest_loc):
         price_ops = get_prices_lyft(app, start_loc, dest_loc)
     else:
         #throw an error if you make an invalid request?
-        print("Error: Invalid app name...")
+        logging.error("Error: Invalid app name...")
         return None
 
     return price_ops
@@ -220,13 +223,13 @@ def get_prices_uber(app, start_loc, dest_loc):
 
     #print (type(uber_prices), uber_prices)
 
-    for  travel_method in uber_prices:
-        if travel_method["display_name"] in RIDE_TYPES:
+    for travel_method in uber_prices:
+        method = travel_method["display_name"].lower()
+        if method in RIDE_TYPES:
             price = (travel_method["low_estimate"], travel_method["high_estimate"])
-            price_ops[travel_method["display_name"]] = price
+            price_ops[method] = price
         else:
-            print(travel_method["display_name"])
-            pass
+            logging.debug(method)
     return price_ops
 
 '''
@@ -267,7 +270,7 @@ def get_prices_lyft(app, start_loc, dest_loc):
                     travel_method["estimated_cost_cents_max"]/100.0)
             price_ops[travel_method["ride_type"]] = price
         else:
-            print (travel_method["ride_type"])
+            logging.debug(travel_method["ride_type"])
             pass
     return price_ops
 
@@ -335,25 +338,25 @@ class loc_tile (object):
 Method to change destination location
 '''
 def set_start(st_loc):
-    print("set_start: " + str(st_loc))
+    logging.debug("set_start: " + str(st_loc))
     main_start = (st_loc[0], st_loc[1])
-    print("main_start: " + str(main_start))
-    print("main_dest: " + str(main_dest))
+    logging.debug("main_start: " + str(main_start))
+    logging.debug("main_dest: " + str(main_dest))
 
 '''
 Method to change destination location
 '''
 def set_dest(des_loc):
-    print("set_dest: " + str(des_loc))
+    logging.debug("set_dest: " + str(des_loc))
     main_dest = (des_loc[0], des_loc[1])
-    print("main_start: " + str(main_start))
-    print("main_dest: " + str(main_dest))
+    logging.debug("main_start: " + str(main_start))
+    logging.debug("main_dest: " + str(main_dest))
 
 '''
 Method to set car choice
 '''
 def set_car(your_ride):
-    print("set_car: " + str(your_ride))
+    logging.debug("set_car: " + str(your_ride))
     main_car_choice = your_ride
 
 
@@ -411,10 +414,10 @@ def buildMap(p2p=True, start_loc = main_start, end_loc = main_dest):
         pos_ends.extend(get_neighbors(list2tuple(end_loc)))
 
     for index in range(len(pos_starts)):
-        print(str(index) + ": " + str(pos_starts[index]))
+        logging.debug(str(index) + ": " + str(pos_starts[index]))
         start_map[index] = pos_starts[index]
         end_map[index] = pos_ends[index]
-        print(start_map)
+        logging.debug(start_map)
 
     for st in pos_starts:
         MyPriceMap[st]= {}
@@ -424,9 +427,8 @@ def buildMap(p2p=True, start_loc = main_start, end_loc = main_dest):
                 MyPriceMap[st][end].update(get_prices(app, st, end))
             #print (MyPriceMap[st][end])
     
-    print("buildMap: " + str(start_map))
-    print()
-    print("buildMap: " + str(MyPriceMap))
+    logging.debug("buildMap: " + str(start_map))
+    logging.debug("buildMap: " + str(MyPriceMap))
     return MyPriceMap
     
 
@@ -449,7 +451,7 @@ returns:
 def query_price(loc_role, loc_num, car_pick):
     price_results = {}
     cars = car_choices[car_pick] # Will be length of num apps
-    print("Query price: " + str(start_map))
+    logging.debug("Query price: " + str(start_map))
     
     if loc_role == "start":
         try:
@@ -465,8 +467,8 @@ def query_price(loc_role, loc_num, car_pick):
 
                 price_results[end_loc] = tuple(found_prices)
         except KeyError as e:
-            print("Key Error: " + str(e))
-            print(start_map)
+            logging.error("Key Error: " + str(e))
+            logging.error(start_map)
 
 
     elif loc_role == "dest":
@@ -481,10 +483,10 @@ def query_price(loc_role, loc_num, car_pick):
                         found_prices[index] = float(min_price)
                 price_results[start] = tuple(found_prices)
         except:
-            print("query_price: Error in data conversion")
+            logging.error("query_price: Error in data conversion")
     else:
         #throw error saying, invalid entry
-        print ("Invalid request.")
+        logging.error("Invalid request.")
 
     return results2json(price_results)
 
@@ -542,10 +544,11 @@ def PriceMap2Json(myMap):
                         "end_loc":json_end_loc,
                         "prices":json_entry}
                 json_map.append(this_query)
-            except:
-                print("PriceMap2Json: error converting to json")
+            except Exception as e:
+                logging.error("PriceMap2Json: %s", e)
 
-    print("json_map: " + str(json_map))
+
+    logging.debug("json_map: " + str(json_map))
     return json_map
 
 def list2tuple(myList):
@@ -553,7 +556,7 @@ def list2tuple(myList):
 
 
 if __name__ == "__main__":
-    print("Base prices: \n")
+    logging.info("Base prices: \n")
     PriceMap = buildMap()
     
     #print(PriceMap[main_start][main_dest])

@@ -7,6 +7,8 @@ import requests
 import threading
 import json
 import os
+import logging
+import mylogger
 
 import RideFare as rf
 
@@ -16,18 +18,8 @@ from io import StringIO
 app = Flask(__name__, static_url_path="")
 # NOT needed for demo
 
-if 'DYNO' in os.environ:
-    sslify=SSLify(app)
-
-#@app.before_request
-#def before_request():
-#    if request.url.startswith('http://'):
-#        url = request.url.replace('http://', 'https://', 1)
-#        print("HTTP request received.... redirecting to " + str(url))
-#        code = 301
-#        return redirect(url, code=code)
-#    else:
-#        print("HTTPS request received....")
+#if 'DYNO' in os.environ:
+#    sslify=SSLify(app)
 
 @app.route("/")
 def run_app():
@@ -89,5 +81,6 @@ def get_price_list():
 
 if __name__ == "__main__":
     # Bind to PORT if defined, otherwise default to 5000.
+    mylogger.config_logs("rideFare")
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
