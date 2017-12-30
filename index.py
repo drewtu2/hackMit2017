@@ -18,8 +18,8 @@ from io import StringIO
 app = Flask(__name__, static_url_path="")
 # NOT needed for demo
 
-#if 'DYNO' in os.environ:
-#    sslify=SSLify(app)
+if 'DYNO' in os.environ:
+    sslify=SSLify(app)
 
 @app.route("/")
 def run_app():
