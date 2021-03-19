@@ -5,7 +5,7 @@ Flask==0.12.2
 Flask-SSLify==0.1.5
 idna==2.6
 itsdangerous==0.24
-Jinja2==2.9.6
+Jinja2==2.11.3
 lyft-rides==0.1.0b0
 MarkupSafe==1.0
 numpy==1.13.1
